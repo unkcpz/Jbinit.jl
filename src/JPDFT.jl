@@ -1,4 +1,4 @@
-module Jbinit
+module JPDFT
 
 greet() = print("Hello World!")
 

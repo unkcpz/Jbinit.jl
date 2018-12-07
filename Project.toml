@@ -1,4 +1,4 @@
-name = "Jbinit"
-uuid = "fef55b68-fa30-11e8-3cf2-c5b990a863ea"
-authors = ["unkcpz "]
+name = "JPDFT"
+uuid = "0948e542-a852-11e9-0487-d92db7f58b0f"
+authors = ["Jason Eu <morty.yu@yahoo.com>"]
 version = "0.1.0"
