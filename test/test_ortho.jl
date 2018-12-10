@@ -4,8 +4,6 @@ using Test
 using LinearAlgebra
 using Random
 
-import .ortho:ortho_sqrt, ortho_sqrt!
-
 atol = 1e-6
 seed = reinterpret(Int32, Random.GLOBAL_RNG.seed)
 
