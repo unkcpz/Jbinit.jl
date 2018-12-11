@@ -7,10 +7,12 @@ positions = Array{Float64, 2}([0.0 0.0 0.0])
 atoms = Vector{Int}([1])
 cell = Cell(latt, positions, atoms)
 @testset "spglibwrapper testset" begin
-    Nirk, = get_ir_reciprocal_mesh([3;3;1], cell, [0;0;0])
+    Nirk, = get_ir_reciprocal_mesh(cell, [3,3,1], [0,0,0])
     @test Nirk == 3
-    Nirk, = get_ir_reciprocal_mesh([2;2;1], cell, [0;0;0])
+    Nirk, = get_ir_reciprocal_mesh(cell, [2,2,1], [0,0,0])
     @test Nirk == 3
-    Nirk, = get_ir_reciprocal_mesh([7;7;1], cell, [0;0;0])
+    Nirk, grid, mapping = get_ir_reciprocal_mesh(cell, [7,7,1], [0,0,0])
+    @test typeof(grid) == Array{Int64, 2}
+    @test typeof(mapping) == Array{Int64, 1}
     @test Nirk == 10
 end

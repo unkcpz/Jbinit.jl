@@ -14,13 +14,13 @@ end
 
 include("cell.jl")
 
-function get_ir_reciprocal_mesh(mesh::Vector{Int64},
-                                cell::Cell,
+function get_ir_reciprocal_mesh(cell::Cell,
+                                mesh::Vector{Int64},
                                 is_shift::Vector{Int64})
-    #
     is_time_reversal = 1
     symprec = 1e-5
 
+    ## have to ??? why??
     cmesh = Base.cconvert(Vector{Cint}, mesh)
     # cmesh = mesh
 
@@ -33,6 +33,12 @@ function get_ir_reciprocal_mesh(mesh::Vector{Int64},
         Cint, Ref{Cdouble}, Ref{Cdouble}, Ptr{Cint}, Cint, Cdouble),
         grid, mapping, cmesh, is_shift,
         is_time_reversal, cell.latt, cell.positions, cell.atoms, cell.Natoms, symprec)
+
+    Nirk = convert(Int64, Nirk)
+    grid = convert(Array{Int64, 2}, grid)
+    grid = transpose(grid)
+    mapping = convert(Array{Int64, 1}, mapping)
+    mapping = mapping .+ 1
 
     return Nirk, grid, mapping
 end # spg_get_ir_reciprocal_mesh function

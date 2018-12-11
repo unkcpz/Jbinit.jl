@@ -1,11 +1,10 @@
-module KSSolver
+include("hamiltonian.jl")
 
-using Hamiltonian: Hamiltonian
 """
 Solves Kohn-Sham problem using trditional self-consistent field(SCF)
 iterations with density mixing.
 """
-function Solve!(Ham::Hamiltonian;
+function scf_solve!(Ham::Hamiltonian;
                 initwfc=nothing, savewfc=false,
                 initrhoe=:gaussian,
                 is_band=true, is_energy=true, is_gap=true,

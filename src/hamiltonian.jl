@@ -4,7 +4,7 @@ mutable struct Hamiltonian
     energies::Energies
     rhoe::Array{Float64, 2} # spin dependent
     electrons::Electrons
-    atoms::Atoms
+    cell:Cell
     pspots::Array{PsPot_GTH, 1}
     pspotNL::PsPotNL
     xcfunc::String
