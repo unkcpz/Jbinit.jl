@@ -20,7 +20,7 @@ function Kpoints(cell::Cell, mesh::Array{Int64, 1}, is_shift::Array{Int64, 1})
     counter = zeros(Int64, Ntotal, 1)
     wka = zeros(Int64, Ntotal, 1)
 
-    for i in 1:Ntotal
+    @inbounds for i in 1:Ntotal
         xi = mapping[i]
         counter[xi] += 1
     end
@@ -29,7 +29,7 @@ function Kpoints(cell::Cell, mesh::Array{Int64, 1}, is_shift::Array{Int64, 1})
     wk = Vector{Float64}(undef, N)
     kgrid = Array{Int64, 2}(undef, N, 3)
     idx = 1
-    for i in 1:Ntotal
+    @inbounds for i in 1:Ntotal
         if counter[i] != 0
             wk[idx] = wka[i]
             kgrid[idx, :] = grid[i, :]

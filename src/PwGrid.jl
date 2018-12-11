@@ -1,4 +1,4 @@
-module PwGrid
+include("kpoints.jl")
 
 using FFTW
 """
@@ -19,7 +19,7 @@ struct GVectorsWF
     Ngw::Array{Int64, 1}    # number of GvectorsWF for each K-points
     idx_gw2g::Array{Array{Int64, 1}, 1}
     idx_gw2r::Array{Array{Int64, 1}, 1}
-    kpoints::KPoints
+    kpoints::Kpoints
 end # GVectorsWF struct
 
 """
@@ -39,5 +39,29 @@ struct PWGrid
     planbw  # return by FFTW.plan_ifft()
 end # PWGrid struct
 
+# function PWGrid(ecutwfc::Float64, LatVecs::Array{Float64, 2}; kpoints=nothing)
+#
+#     ecutrho = 4.0*ecutwfc
+#
+#
+#     return PWGrid(ecutwfc, ecutrho, Ns, LatVecs, RecVecs, CellVolume, r, gvec, gvecw,
+#                   planfw, planbw)
+#
+# end # PwGrid module
 
-end # PwGrid module
+"""
+实空间中的点阵坐标
+"""
+function init_grid_R(latt, ns)
+    R = Array{Float64, 2}(undef, prod(ns), 3)
+    # b is the smallest grid unit
+    b = latt .* (1 ./ hcat(ns, ns, ns))
+    idx = 1
+    for i in Iterators.product(0:ns[1]-1, 0:ns[2]-1, 0:ns[3]-1)
+        scale = collect(i)
+        R[idx, :] = scale' * b
+        idx += 1
+    end
+
+    return R
+end # init_grid_R function
