@@ -10,10 +10,10 @@ end
 """
 Creates an instance of `Electrons`
 """
-function Electrons(cell::Cell, pspots::Vector{Pspot};
+function Electrons(cell::Cell, pspots_dict::Dict{String, Pspot};
                    Nspin=1, Nkpt=1, Nstates=nothing, Nstates_empty=0)
     #
-    Nelec = get_Nelec(cell, pspots)
+    Nelec = get_Nelec(cell, pspots_dict)
 
     # Nstates manually from Nelec
     Nstates_occ = round(Int64, Nelec/2)
@@ -55,8 +55,11 @@ end
 """
 return number of electrons for a given `cell::Cell` and `pspots::Array{pspot_GTH, 1}`
 """
-function get_Nelec(cell::Cell, pspots::Vector{Pspot})
+function get_Nelec(cell::Cell, pspots_dict::Dict{String, Pspot})
     Nelec = 0.0
-    # cell.compositions
+    com = cell.compositions
+    for (k, v) in com
+        Nelec += pspot[k].zval * v
+    end
     return Nelec
 end
