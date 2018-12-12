@@ -17,5 +17,4 @@ function scf_solve!(Ham::Hamiltonian;
     Ngw = pw.gvecw.Ngw
     wk = Ham.pw.gvecw.kpoints.wk
 
-
 end
