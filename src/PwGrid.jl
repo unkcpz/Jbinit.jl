@@ -39,15 +39,41 @@ struct PWGrid
     planbw  # return by FFTW.plan_ifft()
 end # PWGrid struct
 
-# function PWGrid(ecutwfc::Float64, LatVecs::Array{Float64, 2}; kpoints=nothing)
-#
-#     ecutrho = 4.0*ecutwfc
-#
-#
-#     return PWGrid(ecutwfc, ecutrho, Ns, LatVecs, RecVecs, CellVolume, r, gvec, gvecw,
-#                   planfw, planbw)
-#
-# end # PwGrid module
+function PWGrid(ecutwfc::Float64, latt::Array{Float64, 2}; kpoints=nothing)
+
+    ecutrho = 4.0*ecutwfc
+    RecVecs = 2π * latt'
+
+    latLen = Vector{Float64}(undef, 3)
+    for i in 1:3
+        latLen[i] = norm(latt[:, i])
+    end
+
+    ns = map(x -> 2*round(Int64, √(ecutrho/2)x/π) + 1, latLen)
+
+    r = init_grid_R(latt, ns)
+
+    # gvec = init_gvec(ns, RecVecs, ecutrho)
+    #
+    # if kpoints == nothing
+    #     kpoints = KPoints(1, (1,1,1), zeros(1,3), [1.0], RecVecs)
+    # end
+    #
+    # gvecw = init_gvecw(ecutwfc, gve, kpoints)
+    #
+    # planfw = plan_fft(zeros(ns))
+    # planbw = plan_ifft(zeros(ns))
+
+    return PWGrid(ecutwfc, ecutrho, ns, latt, RecVecs, CellVolume, r, gvec, gvecw,
+                  planfw, planbw)
+
+end # PwGrid module
+
+function grid_num(len_latt, ecutrho)
+    n = 2*round(Int64, sqrt(ecutwfc/2)*len_latt/π) + 1
+    # n = good_fft_order(n)
+    return n
+end
 
 """
 实空间中的点阵坐标
