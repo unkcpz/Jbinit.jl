@@ -1,4 +1,5 @@
 include("hamiltonian.jl")
+include("wfinit.jl")
 
 """
 Solves Kohn-Sham problem using trditional self-consistent field(SCF)
@@ -14,7 +15,31 @@ function scf_solve!(Ham::Hamiltonian;
                 mix_method="simple", MIXDIM=5,
                 ETOT_CONV_THR=1-6)
     pw = Ham.pw
+
     Ngw = pw.gvecw.Ngw
-    wk = Ham.pw.gvecw.kpoints.wk
+    kpoints = pw.gvecw.kpoints
+    Nkpt = kpoints.Nkpt
+    wk = kpoints.wk
+
+    Ns = pw.Ns
+    Npoints = prod(Ns)
+    CellVolume = pw.CellVolume
+    dVol = CellVolume/Npoints
+
+    electrons = Ham.electrons
+    Nelec = elctrons.Nelec
+    socc = elctrons.socc
+    Nstates = electrons.Nstates
+    Nstates_occ = electrons.Nstates_occ
+    Nspin = electrons.Nspin
+
+    Nkspin = Nkpt*Nspin
+
+    # Random guess of wave function
+    if startingwfc = nothing
+        psiks = rand_bwf(pw, electrons)
+    else
+        psiks = startingwfc
+    end
 
 end

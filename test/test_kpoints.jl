@@ -5,8 +5,8 @@ using LinearAlgebra
 
 latt = Array{Float64, 2}([0.5 0.0 3.0; 0.0 0.5 3.0; 0.0 0.0 3.0])*5.4
 positions = Array{Float64, 2}([0.0 0.0 0.0])
-atoms = Vector{Int}([1])
-cell = Cell(latt, positions, atoms)
+symb = Vector{String}(["H"])
+cell = Cell(latt, positions, symb)
 kp = Kpoints(cell, [2,2,1], [0,0,0])
 @testset "kpoints testset" begin
     @test kp.N == 3

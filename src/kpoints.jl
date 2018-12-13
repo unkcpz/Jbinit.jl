@@ -42,7 +42,7 @@ function Kpoints(cell::Cell, mesh::Array{Int64, 1}, is_shift::Array{Int64, 1})
     @assert size(k, 1) == N
 
     tuple_mesh = (mesh[1], mesh[2], mesh[3])
-    RecVecs = 2π*inv(cell.latt')
+    RecVecs = 2π*inv(cell.lattice')
 
     return Kpoints(N, tuple_mesh, k, wk, RecVecs)
 end # Kpoints function

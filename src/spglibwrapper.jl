@@ -32,11 +32,11 @@ function get_ir_reciprocal_mesh(cell::Cell,
         (Ref{Cint}, Ref{Cint}, Ptr{Cint}, Ptr{Cint},
         Cint, Ref{Cdouble}, Ref{Cdouble}, Ptr{Cint}, Cint, Cdouble),
         grid, mapping, cmesh, is_shift,
-        is_time_reversal, cell.latt, cell.positions, cell.atoms, cell.Natoms, symprec)
+        is_time_reversal, cell.lattice, cell.positions, cell.atoms, cell.Natoms, symprec)
 
     Nirk = convert(Int64, Nirk)
-    grid = convert(Array{Int64, 2}, grid)
     grid = transpose(grid)
+    grid = convert(Array{Int64, 2}, grid)
     mapping = convert(Array{Int64, 1}, mapping)
     mapping = mapping .+ 1
 

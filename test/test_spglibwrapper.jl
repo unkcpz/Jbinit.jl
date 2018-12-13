@@ -4,8 +4,8 @@ using Test
 
 latt = Array{Float64, 2}([0.5 0.0 14.0; 0.0 0.5 14.0; 0.0 0.0 14.0])*5.4
 positions = Array{Float64, 2}([0.0 0.0 0.0])
-atoms = Vector{Int}([1])
-cell = Cell(latt, positions, atoms)
+symb = Vector{String}(["H"])
+cell = Cell(latt, positions, symb)
 @testset "spglibwrapper testset" begin
     Nirk, = get_ir_reciprocal_mesh(cell, [3,3,1], [0,0,0])
     @test Nirk == 3
