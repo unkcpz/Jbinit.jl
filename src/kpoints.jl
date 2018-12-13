@@ -27,22 +27,23 @@ function Kpoints(cell::Cell, mesh::Array{Int64, 1}, is_shift::Array{Int64, 1})
     wka = counter .* inv(Ntotal)
 
     wk = Vector{Float64}(undef, N)
-    kgrid = Array{Int64, 2}(undef, N, 3)
+    kgrid = Array{Float64, 2}(undef, N, 3)
     idx = 1
+    # println("grid: $grid")
+    # println("mapping: $mapping")
     @inbounds for i in 1:Ntotal
         if counter[i] != 0
             wk[idx] = wka[i]
-            kgrid[idx, :] = grid[i, :]
+            kgrid[idx, :] = grid[i, :]./mesh
             idx += 1
         end
     end
-    k = kgrid ./ mesh
 
     @assert size(wk, 1) == N
-    @assert size(k, 1) == N
+    @assert size(kgrid, 1) == N
 
     tuple_mesh = (mesh[1], mesh[2], mesh[3])
     RecVecs = 2π*inv(cell.lattice')
 
-    return Kpoints(N, tuple_mesh, k, wk, RecVecs)
+    return Kpoints(N, tuple_mesh, kgrid, wk, RecVecs)
 end # Kpoints function
