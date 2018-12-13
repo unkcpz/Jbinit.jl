@@ -28,15 +28,22 @@ C GTH-PBE-q4
      0.29150694  0
 """
 
-@testset "electrons testset" begin
-    latt = [5.0 0 0; 0 5.0 0; 0 0 5.0]
-    pos = [0 0 0; 0.25 0.25 0.25; 0.5 0.5 0.5]
-    symb = ["C", "O", "C"]
-    c = Cell(latt, pos, symb)
+latt = [5.0 0 0; 0 5.0 0; 0 0 5.0]
+pos = [0 0 0; 0.25 0.25 0.25; 0.5 0.5 0.5]
+symb = ["C", "O", "C"]
+c = Cell(latt, pos, symb)
 
-    o_gth = Pspot(o_gth_str)
-    c_gth = Pspot(c_gth_str)
-    p_dict = Dict{String, Pspot}(["C" => c_gth, "O" => o_gth])
+o_gth = Pspot(o_gth_str)
+c_gth = Pspot(c_gth_str)
+p_dict = Dict{String, Pspot}(["C" => c_gth, "O" => o_gth])
+
+@testset "function get_Nelec" begin
     @test get_Nelec(c, p_dict) == 14
+end
 
+@testset "Constructor Electrons" begin
+    elec = Electrons(c, p_dict)
+    @test elec.Nelec == 14
+    @test elec.Nstates == 7
+    @test elec.Nstates_occ == 7
 end
