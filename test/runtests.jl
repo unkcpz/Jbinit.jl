@@ -5,4 +5,5 @@
 # include("test_kpoints.jl")
 # include("test_PwGrid.jl")
 # include("test_energy.jl")
-include("test_pspot.jl")
+# include("test_pspot.jl")
+include("test_electrons.jl")

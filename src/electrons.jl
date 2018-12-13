@@ -1,3 +1,6 @@
+include("pspot.jl")
+include("cell.jl")
+
 mutable struct Electrons
     Nelec::Float64
     Nstates::Int64
@@ -34,6 +37,7 @@ function Electrons(cell::Cell, pspots_dict::Dict{String, Pspot};
             socc[Nstates_occ, :] .= 1.0
         else
             socc[Nstates_occ, :] .= 2.0
+        end
     elseif Nspin == 2
         for i = 1:Nstates_occ-1
             socc[i, :] .= 1.0
@@ -43,6 +47,8 @@ function Electrons(cell::Cell, pspots_dict::Dict{String, Pspot};
             socc[Nstates_occ, 1:Nkpt] .= 1.0
         else
             socc[Nstates_occ, :] .= 1.0
+        end
+    end
 
     sum_socc = sum(socc)/Nkpt
     if abs(sum_socc - Nelec) > eps()
@@ -59,7 +65,7 @@ function get_Nelec(cell::Cell, pspots_dict::Dict{String, Pspot})
     Nelec = 0.0
     com = cell.compositions
     for (k, v) in com
-        Nelec += pspot[k].zval * v
+        Nelec += pspots_dict[k].zval * v
     end
     return Nelec
 end
