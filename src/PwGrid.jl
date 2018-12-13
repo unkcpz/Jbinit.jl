@@ -17,8 +17,8 @@ The type for set of G-vectors for describing wave function
 struct GVectorsWF
     Ngwx::Int64             # maximum(Ngk)
     Ngw::Vector{Int64}    # number of GvectorsWF for each K-points
-    idx_gw2g::Array{Array{Int64, 1}, 1}
-    idx_gw2r::Array{Array{Int64, 1}, 1}
+    # idx_gw2g::Array{Array{Int64, 1}, 1}
+    # idx_gw2r::Array{Array{Int64, 1}, 1}
     kpoints::Kpoints
 end # GVectorsWF struct
 
@@ -90,7 +90,7 @@ end # init_grid_real function
 """
 倒空间中满足|g|^2 < 2ecutrho的点, 及其到Γ的距离
 """
-function init_Gvectors(recLatt::Array{Float64, 2}, Ns::Vector{Int64}, ecutrho::Float64)
+function init_GVectors(recLatt::Array{Float64, 2}, Ns::Vector{Int64}, ecutrho::Float64)
     iter_points = Iterators.product(
         ceil(Int64, -Ns[1]/2):ceil(Int64, Ns[1]/2)-1,
         ceil(Int64, -Ns[2]/2):ceil(Int64, Ns[2]/2)-1,
@@ -118,4 +118,29 @@ function init_Gvectors(recLatt::Array{Float64, 2}, Ns::Vector{Int64}, ecutrho::F
     G_length = convert(Vector{Float64}, G_length)
 
     return GVectors(Ng, G, G_length)
+end
+
+"""
+对于每一个k点,给出该k点需要的平面波数量
+"""
+function init_GVectorsWF(ecutwfc::Float64, gvec::GVectors, kpoints::Kpoints)
+    G = gvec.G
+    Ng = gvec.Ng
+
+    kpts = kpoints.k
+    Nkpt = kpoints.N
+
+    Ngw = Vector{Int64}(undef, Nkpt)
+    Gk_l = Vector{Float64}(undef, Ng)
+    for ik = 1:Nkpt
+        for ig = 1:Ng
+            Gk = G[ig, :] .+ kpts[ik, :]
+            Gk_l[ig] = norm(Gk)
+        end
+        Ngw[ik] = length(findall(Gk_l .< ecutwfc))
+    end
+
+    N_max = maximum(Ngw)
+
+    return GVectorsWF(N_max, Ngw, kpoints)
 end

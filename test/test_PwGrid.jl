@@ -17,17 +17,29 @@ using LinearAlgebra
     @test has_row([3 3 3], r)
 end
 
-@testset "init_Gvectors testset" begin
-    latt = [5.0 0 0; 0 5.0 0; 0 0 5.0]
-
-    recLatt = 2π * inv(transpose(latt))
-    lattLen = Vector{Float64}(undef, 3)
-    for i in 1:3
-        lattLen[i] = norm(latt[i, :])
-    end
-    ecutrho = 120.0
-    Ns = map(x -> 2*round(Int64, √(ecutrho/2)x/π) + 1, lattLen)
-
-    gvec = init_Gvectors(recLatt, Ns, ecutrho)
+"""
+"""
+latt = [5.0 0 0; 0 5.0 0; 0 0 5.0]
+recLatt = 2π * inv(transpose(latt))
+lattLen = Vector{Float64}(undef, 3)
+for i in 1:3
+    lattLen[i] = norm(latt[i, :])
+end
+ecutrho = 120.0
+Ns = map(x -> 2*round(Int64, √(ecutrho/2)x/π) + 1, lattLen)
+gvec = init_GVectors(recLatt, Ns, ecutrho)
+@testset "init_GVectors testset" begin
     @test size(gvec.G, 1) == size(gvec.G_length, 1) == gvec.Ng
+end
+
+latt = [5.0 0 0; 0 5.0 0; 0 0 5.0]
+positions = Array{Float64, 2}([0.0 0.0 0.0])
+symb = Vector{String}(["H"])
+cell = Cell(latt, positions, symb)
+kpoints = Kpoints(cell, [2,2,1], [0,0,0])
+ecutwfc = 30.0
+gvecwf = init_GVectorsWF(ecutwfc, gvec, kpoints)
+@testset "init_GVectorsWF testset" begin
+    @test length(gvecwf.Ngw) == gvecwf.kpoints.N
+    @test gvecwf.N_max == 7809 # ??? useless ut
 end
