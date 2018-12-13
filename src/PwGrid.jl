@@ -16,7 +16,7 @@ The type for set of G-vectors for describing wave function
 """
 struct GVectorsWF
     Ngwx::Int64             # maximum(Ngk)
-    Ngw::Array{Int64, 1}    # number of GvectorsWF for each K-points
+    Ngw::Vector{Int64}    # number of GvectorsWF for each K-points
     idx_gw2g::Array{Array{Int64, 1}, 1}
     idx_gw2r::Array{Array{Int64, 1}, 1}
     kpoints::Kpoints

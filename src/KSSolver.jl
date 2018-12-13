@@ -42,4 +42,11 @@ function scf_solve!(Ham::Hamiltonian;
         psiks = startingwfc
     end
 
+    # Calculated electron density from wf psik and update hamiltonian
+    rhoe = zeros(Float64, Npoints, Nspin) # 2维矩阵是实空间中格点数量x自旋数量
+
+    # TODO: Nspin == 2
+    rhoe[:, :] = calc_rhoe(Nelec, pw, socc, psiks, Nspin)
+    update!(Ham, rhoe)
+
 end

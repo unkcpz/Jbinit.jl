@@ -7,3 +7,4 @@
 # include("test_energy.jl")
 # include("test_pspot.jl")
 # include("test_electrons.jl")
+include("test_wfinit.jl")
