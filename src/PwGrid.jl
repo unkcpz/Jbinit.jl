@@ -8,6 +8,7 @@ struct GVectors
     Ng::Int64
     G::Array{Vector{Float64}, 3}
     G_length::Array{Float64, 3}
+    G_use::Array{Bool, 3}
     # idx_g2r::Array{Int64, 1}
 end # GVectors struct
 
@@ -105,30 +106,35 @@ function init_GVectors(recLatt::Array{Float64, 2}, Ns::Vector{Int64}, ecutrho::F
 
     Ng = count(G_use)
 
-    return GVectors(Ng, G, G_length)
+    return GVectors(Ng, G, G_length, G_use)
 end
 
 """
-对于每一个k点,给出该k点需要的平面波数量
+对于每一个k点,给出该k点需要的平面波数量,以及这些平面波的序号
 """
 function init_GVectorsWF(ecutwfc::Float64, gvec::GVectors, kpoints::Kpoints)
     G = gvec.G
+    G_use = gvec.G_use
     Ng = gvec.Ng
 
     kpts = kpoints.k
     Nkpt = kpoints.N
 
-    Ngw = Vector{Int64}(undef, Nkpt)
-    Gk_l = Vector{Float64}(undef, Ng)
+    kgw_n = zeros(Nkpt)
+    kgw_p = Vector{Array{Bool, 3}}(undef, Nkpt)
+
     for ik = 1:Nkpt
-        for ig = 1:Ng
-            Gk = G[ig, :] .+ kpts[ik, :]
-            Gk_l[ig] = norm(Gk)
+        kgw_p[ik] = falses(size(G_use))
+        for I in CartesianIndices(G)
+            Gk = G[I] .+ kpts[ik, :]
+            if norm(Gk) < √(2ecutwfc)
+                kgw_p[ik][I] = true
+            end
         end
-        Ngw[ik] = length(findall(Gk_l .< ecutwfc))
+        kgw_n[ik] = count(kgw_p[ik])
     end
 
-    N_max = maximum(Ngw)
+    N_max = maximum(kgw_n)
 
-    return GVectorsWF(N_max, Ngw, kpoints)
+    return GVectorsWF(N_max, kgw_n, kpoints)
 end

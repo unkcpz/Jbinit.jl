@@ -25,7 +25,9 @@ ecutrho = 120.0
 Ns = map(x -> 2*round(Int64, √(ecutrho/2)x/π) + 1, lattLen)
 gvec = init_GVectors(recLatt, Ns, ecutrho)
 @testset "init_GVectors testset" begin
-    @test gvec.Ng == 4
+    @test gvec.Ng == 7746 # dummy test
+    @test count(gvec.G_use) == gvec.Ng
+    @show length(gvec.G_use)
 end
 
 latt = [5.0 0 0; 0 5.0 0; 0 0 5.0]
@@ -37,5 +39,5 @@ ecutwfc = 30.0
 gvecwf = init_GVectorsWF(ecutwfc, gvec, kpoints)
 @testset "init_GVectorsWF testset" begin
     @test length(gvecwf.Ngw) == gvecwf.kpoints.N
-    @test gvecwf.N_max == 7809 # ??? useless ut
+    @test gvecwf.N_max == 988 # ??? useless ut
 end
