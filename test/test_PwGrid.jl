@@ -3,10 +3,10 @@ include("../src/PwGrid.jl")
 using Test
 using LinearAlgebra
 
-@testset "init_grid_R test" begin
+@testset "init_RVectors test" begin
     latt = Array{Float64, 2}([10 10 10; 5 0 5; 5 5 0])
     ns = Vector{Int64}([10, 8, 6])
-    r = init_grid_real(latt, ns)
+    r = init_RVectors(latt, ns)
 
     @test size(r) == (10, 8, 6)
     @test r[1, 1, 1] == [0.0, 0.0, 0.0]
@@ -25,7 +25,7 @@ ecutrho = 120.0
 Ns = map(x -> 2*round(Int64, √(ecutrho/2)x/π) + 1, lattLen)
 gvec = init_GVectors(recLatt, Ns, ecutrho)
 @testset "init_GVectors testset" begin
-    @test size(gvec.G, 1) == size(gvec.G_length, 1) == gvec.Ng
+    @test gvec.Ng == 4
 end
 
 latt = [5.0 0 0; 0 5.0 0; 0 0 5.0]

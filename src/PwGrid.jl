@@ -6,8 +6,8 @@ The type for set of G-vectors for describing density and potentials
 """
 struct GVectors
     Ng::Int64
-    G::Array{Float64, 2}
-    G_length::Vector{Float64}
+    G::Array{Vector{Float64}, 3}
+    G_length::Array{Float64, 3}
     # idx_g2r::Array{Int64, 1}
 end # GVectors struct
 
@@ -74,7 +74,7 @@ end # PwGrid module
 """
 实空间中的点阵坐标,以一个3D矩阵表示,每个矩阵元表示该位置实际的分数坐标
 """
-function init_grid_real(lattice, Ns)
+function init_RVectors(lattice, Ns)
     r = Array{Vector{Float64}, 3}(undef, Ns[1], Ns[2], Ns[3])
     # b is the smallest grid unit
     b = lattice ./ hcat(Ns, Ns, Ns)
@@ -90,31 +90,20 @@ end # init_grid_real function
 倒空间中满足|g|^2 < 2ecutrho的点, 及其到Γ的距离
 """
 function init_GVectors(recLatt::Array{Float64, 2}, Ns::Vector{Int64}, ecutrho::Float64)
-    iter_points = Iterators.product(
-        ceil(Int64, -Ns[1]/2):ceil(Int64, Ns[1]/2)-1,
-        ceil(Int64, -Ns[2]/2):ceil(Int64, Ns[2]/2)-1,
-        ceil(Int64, -Ns[3]/2):ceil(Int64, Ns[3]/2)-1
-    )
-
-    G_tmp = []
-    G_length = []
-    for (idx, i) in enumerate(iter_points)
-        scale = collect(i)
-        g = transpose(scale) * recLatt
-        gl = norm(g)
+    G = Array{Vector{Float64}, 3}(undef, Ns[1], Ns[2], Ns[3])
+    G_length = Array{Float64, 3}(undef, Ns[1], Ns[2], Ns[3])
+    G_use = falses(Ns[1], Ns[2], Ns[3])
+    t = map(ceil, [Ns[1]/2, Ns[2]/2, Ns[3]/2]) .- 1
+    for I in CartesianIndices(G)
+        scale = collect(Tuple(I)) - t
+        G[I] = g = transpose(recLatt) * scale
+        G_length[I] = gl = norm(g)
         if gl < √(2ecutrho)
-            push!(G_tmp, g)
-            push!(G_length, gl)
+            G_use[I] = true
         end
     end
 
-    Ng = length(G_tmp)
-    G = Array{Float64, 2}(undef, Ng, 3)
-    for i = 1:Ng
-        G[i,:] = transpose(G_tmp[i])
-    end
-
-    G_length = convert(Vector{Float64}, G_length)
+    Ng = count(G_use)
 
     return GVectors(Ng, G, G_length)
 end
