@@ -15,7 +15,7 @@ end # GVectors struct
 The type for set of G-vectors for describing wave function
 """
 struct GVectorsWF
-    Ngwx::Int64             # maximum(Ngk)
+    N_max::Int64             # maximum(Ngk)
     Ngw::Vector{Int64}    # number of GvectorsWF for each K-points
     # idx_gw2g::Array{Array{Int64, 1}, 1}
     # idx_gw2r::Array{Array{Int64, 1}, 1}
@@ -61,8 +61,8 @@ function PWGrid(ecutwfc::Float64, lattice::Array{Float64, 2}; kpoints=nothing)
 
     gvecw = init_gvecw(ecutwfc, gvec, kpoints)
 
-    planfw = plan_fft(zeros(ns))
-    planbw = plan_ifft(zeros(ns))
+    planfw = plan_fft(zeros(Ns))
+    planbw = plan_ifft(zeros(Ns))
 
     return PWGrid(ecutwfc, ecutrho, (Ns[1], Ns[2], Ns[3]),
                   lattice, recLatt, CellVolume, r,

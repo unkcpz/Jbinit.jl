@@ -21,6 +21,7 @@ function scf_solve!(Ham::Hamiltonian;
     Nkpt = kpoints.Nkpt
     wk = kpoints.wk
 
+    # 实空间分割和实空间点密度
     Ns = pw.Ns
     Npoints = prod(Ns)
     CellVolume = pw.CellVolume

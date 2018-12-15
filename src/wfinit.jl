@@ -2,7 +2,10 @@ include("PwGrid.jl")
 include("electrons.jl")
 include("ortho.jl")
 
-const BlochWaveFunc = Vector{Array{ComplexF64, 2}}
+mutable struct BlochWF
+    Nstates::Int64
+    psiks::Vector{Array{ComplexF64, 2}}
+end
 
 """
 返回一个Vector每一个元素是一个二维Nbasis*Nstates的矩阵,
@@ -15,7 +18,7 @@ function rand_bwf(Ngw::Vector{Int64}, Nspin::Int64, Nstates::Int64)
     Nkspin = Nspin * Nkpt
 
     # 初始化每一个态
-    psiks = BlochWaveFunc(undef, Nkspin)
+    psiks = Vector{Array{ComplexF64, 2}}(undef, Nkspin)
 
     for ispin = 1:Nspin
         for ik = 1:Nkpt
@@ -24,7 +27,7 @@ function rand_bwf(Ngw::Vector{Int64}, Nspin::Int64, Nstates::Int64)
         end
     end
 
-    return psiks
+    return BlochWF(Nstates, psiks)
 end
 """
 rand_bwf function generate a random bloch wave function
