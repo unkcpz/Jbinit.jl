@@ -8,13 +8,9 @@ using LinearAlgebra
     ns = Vector{Int64}([10, 8, 6])
     r = init_grid_real(latt, ns)
 
-    function has_row(v, m)
-        return any(Bool[v == m[i, :]' for i=1:size(m, 1)])
-    end
-
-    @test size(r) == (480, 3)
-    @test has_row([0 0 0], r)
-    @test has_row([3 3 3], r)
+    @test size(r) == (10, 8, 6)
+    @test r[1, 1, 1] == [0.0, 0.0, 0.0]
+    @test r[2, 1, 1] == [1.0, 1.0, 1.0]
 end
 
 """

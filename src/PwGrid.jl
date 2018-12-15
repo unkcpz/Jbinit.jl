@@ -72,16 +72,15 @@ function PWGrid(ecutwfc::Float64, lattice::Array{Float64, 2}; kpoints=nothing)
 end # PwGrid module
 
 """
-实空间中的点阵坐标
+实空间中的点阵坐标,以一个3D矩阵表示,每个矩阵元表示该位置实际的分数坐标
 """
 function init_grid_real(lattice, Ns)
-    r = Array{Float64, 2}(undef, prod(Ns), 3)
+    r = Array{Vector{Float64}, 3}(undef, Ns[1], Ns[2], Ns[3])
     # b is the smallest grid unit
-    b = lattice .* (1 ./ hcat(Ns, Ns, Ns))
-    iter_points = Iterators.product(0:Ns[1]-1, 0:Ns[2]-1, 0:Ns[3]-1)
-    for (idx, i) in enumerate(iter_points)
-        scale = collect(i)
-        r[idx, :] = transpose(scale) * b
+    b = lattice ./ hcat(Ns, Ns, Ns)
+    for I in CartesianIndices(r)
+        scale = collect(Tuple(I)) .- 1
+        r[I] = transpose(b) * scale
     end
 
     return r
