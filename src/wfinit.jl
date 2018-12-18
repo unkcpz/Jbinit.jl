@@ -32,12 +32,12 @@ end
 """
 rand_bwf function generate a random bloch wave function
 """
-function rand_bwf(pw::PWGrid, Nspin::Int64, Nstates::Int64)
-    Ngw = pw.gvecw.Ngw
+function rand_bwf(pw::PwGrid, Nspin::Int64, Nstates::Int64)
+    Ngw = pw.gvecwf.kgw_n
     return rand_bwf(Ngw, Nspin, Nstates)
 end # rand_bwf function
 
-function rand_bwf(pw::PWGrid, electrons::Electrons)
+function rand_bwf(pw::PwGrid, electrons::Electrons)
     Nspin = electrons.Nspin
     Nstates = electrons.Nstates
     return rand_bwf(pw, Nspin, Nstates)

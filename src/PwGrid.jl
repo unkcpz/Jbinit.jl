@@ -1,6 +1,7 @@
 include("kpoints.jl")
 
 using FFTW
+using LinearAlgebra
 """
 The type for set of G-vectors for describing density and potentials
 """
@@ -17,30 +18,31 @@ The type for set of G-vectors for describing wave function
 """
 struct GVectorsWF
     N_max::Int64             # maximum(Ngk)
-    Ngw::Vector{Int64}    # number of GvectorsWF for each K-points
+    kgw_n::Vector{Int64}    # number of GvectorsWF for each K-points
     # idx_gw2g::Array{Array{Int64, 1}, 1}
     # idx_gw2r::Array{Array{Int64, 1}, 1}
+    kgw_p::Vector{Vector{CartesianIndex{3}}}
     kpoints::Kpoints
 end # GVectorsWF struct
 
 """
 PWGrid describe plane wave basis set for a given periodic unit cell
 """
-struct PWGrid
+struct PwGrid
     ecutwfc::Float64    # energy cut of wavefunction
     ecutrho::Float64    #
     Ns::Tuple{Int64, Int64, Int64}
     lattice::Array{Float64, 2}
     recLatt::Array{Float64, 2}
     CellVolume::Float64
-    r::Array{Float64, 2}
+    r::Array{Vector{Float64}, 3}
     gvec::GVectors
     gvecwf::GVectorsWF
     planfw  # return by FFTW.plan_fft()
     planbw  # return by FFTW.plan_ifft()
-end # PWGrid struct
+end # PwGrid struct
 
-function PWGrid(ecutwfc::Float64, lattice::Array{Float64, 2}; kpoints=nothing)
+function PwGrid(ecutwfc::Float64, lattice::Array{Float64, 2}; kpoints=nothing)
 
     ecutrho = 4.0*ecutwfc
     recLatt = 2π * inv(transpose(lattice))
@@ -50,22 +52,24 @@ function PWGrid(ecutwfc::Float64, lattice::Array{Float64, 2}; kpoints=nothing)
         lattLen[i] = norm(lattice[i, :])
     end
 
+    CellVolume = det(lattice)
+
     Ns = map(x -> 2*round(Int64, √(ecutrho/2)x/π) + 1, lattLen)
 
-    r = init_grid_real(lattice, Ns)
+    r = init_RVectors(lattice, Ns)
 
-    gvec = init_Gvectors(ns, recLatt, ecutrho)
+    gvec = init_GVectors(ecutrho, Ns, recLatt)
 
     if kpoints == nothing
         kpoints = KPoints(1, (1,1,1), zeros(1,3), [1.0], recLattice)
     end
 
-    gvecw = init_gvecw(ecutwfc, gvec, kpoints)
+    gvecw = init_GVectorsWF(ecutwfc, gvec, kpoints)
+    #
+    planfw = plan_fft(zeros(Ns[1], Ns[2], Ns[3]))
+    planbw = plan_ifft(zeros(Ns[1], Ns[2], Ns[3]))
 
-    planfw = plan_fft(zeros(Ns))
-    planbw = plan_ifft(zeros(Ns))
-
-    return PWGrid(ecutwfc, ecutrho, (Ns[1], Ns[2], Ns[3]),
+    return PwGrid(ecutwfc, ecutrho, (Ns[1], Ns[2], Ns[3]),
                   lattice, recLatt, CellVolume, r,
                   gvec, gvecw,
                   planfw, planbw)
@@ -90,7 +94,7 @@ end # init_grid_real function
 """
 倒空间中满足|g|^2 < 2ecutrho的点, 及其到Γ的距离
 """
-function init_GVectors(recLatt::Array{Float64, 2}, Ns::Vector{Int64}, ecutrho::Float64)
+function init_GVectors(ecutrho::Float64, Ns::Vector{Int64}, recLatt::Array{Float64, 2})
     G = Array{Vector{Float64}, 3}(undef, Ns[1], Ns[2], Ns[3])
     G_length = Array{Float64, 3}(undef, Ns[1], Ns[2], Ns[3])
     G_use = falses(Ns[1], Ns[2], Ns[3])
@@ -121,20 +125,21 @@ function init_GVectorsWF(ecutwfc::Float64, gvec::GVectors, kpoints::Kpoints)
     Nkpt = kpoints.N
 
     kgw_n = zeros(Nkpt)
-    kgw_p = Vector{Array{Bool, 3}}(undef, Nkpt)
+    kgw_p = Vector{Vector{CartesianIndex{3}}}(undef, Nkpt)
 
     for ik = 1:Nkpt
-        kgw_p[ik] = falses(size(G_use))
+        kgw_p[ik] = []
         for I in CartesianIndices(G)
             Gk = G[I] .+ kpts[ik, :]
-            if norm(Gk) < √(2ecutwfc)
-                kgw_p[ik][I] = true
+            # 倒空间采样的基础上对波函数截断
+            if G_use[I] == true && norm(Gk) < √(2ecutwfc)
+                push!(kgw_p[ik], I)
             end
         end
-        kgw_n[ik] = count(kgw_p[ik])
+        kgw_n[ik] = length(kgw_p[ik])
     end
 
     N_max = maximum(kgw_n)
 
-    return GVectorsWF(N_max, kgw_n, kpoints)
+    return GVectorsWF(N_max, kgw_n, kgw_p, kpoints)
 end

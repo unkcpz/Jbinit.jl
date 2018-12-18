@@ -38,6 +38,6 @@ kpoints = Kpoints(cell, [2,2,1], [0,0,0])
 ecutwfc = 30.0
 gvecwf = init_GVectorsWF(ecutwfc, gvec, kpoints)
 @testset "init_GVectorsWF testset" begin
-    @test length(gvecwf.Ngw) == gvecwf.kpoints.N
+    @test length(gvecwf.kgw_n) == gvecwf.kpoints.N
     @test gvecwf.N_max == 988 # ??? useless ut
 end
