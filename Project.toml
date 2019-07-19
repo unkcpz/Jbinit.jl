@@ -2,3 +2,9 @@ name = "JPDFT"
 uuid = "0948e542-a852-11e9-0487-d92db7f58b0f"
 authors = ["Jason Eu <morty.yu@yahoo.com>"]
 version = "0.1.0"
+
+[deps]
+FFTW = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"

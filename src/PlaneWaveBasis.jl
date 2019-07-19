@@ -7,15 +7,21 @@ struct PlaneWaveBasis{T <: Real}
     unit_cell_volume::T
     recip_cell_volume::T
 
+    # Ecut::T
+
     grid_size::Vec3{Int}
     idx_DC::Int  # Index of the DC component in the rectangular grid
+    # kpoints::Vector{Vec3{T}}
+    # basis_wf::Vector{Vector{Vec3{Int}}}
+
+    # kweights::Vector{T}
 
     FFT::FFTW.cFFTWPlan{Complex{T},-1,true,3}
     iFFT::AbstractFFTs.ScaledPlan{Complex{Float64},FFTW.cFFTWPlan{Complex{T},1,true,3},T}
 end
 
 function PlaneWaveBasis(lattice::AbstractMatrix{T}, grid_size) where {T <: Real}
-    lattice = SMatrix{3, 3, T, 9}(lattice)
+    lattice = Mat3{T}(lattice)
     recip_lattice = 2π * inv(lattice')
 
     @assert(mod.(grid_size, 2) == ones(3),
@@ -33,15 +39,30 @@ function PlaneWaveBasis(lattice::AbstractMatrix{T}, grid_size) where {T <: Real}
     pw = PlaneWaveBasis{T}(lattice, recip_lattice, det(lattice), det(recip_lattice),
                            grid_size, idx_DC, fft_plan, ifft_plan)
 end
+"""
+Reset the kpoints of an existing Plane-wave basis and change the basis accordingly.
+"""
+function set_kpoints!(pw::PlaneWaveBasis{T}, kpoints, kweights; Ecut=pw.Ecut) where T
+    @assert(length(kpoints) == length(kweights),
+            "Lengths of kpoints and length of kweights need to agree")
+    @assert sum(kweights) ≈ 1 "kweights are assumed to be normalized."
+    max_E = sum(abs2, pw.recip_lattice * floor.(Int, pw.grid_size ./ 2)) / 2
+    @assert(Ecut ≤ max_E, "Ecut should be less than the maximal kinetic energy " *
+            "the grid supports (== $max_E)")
 
-# [15,15,15] -> [-7:7,-7:7,-7:7] generator
-function basis_ρ(grid_size)
-    start = -ceil.(Int, (grid_size .- 1) ./ 2)
-    stop  = floor.(Int, (grid_size .- 1) ./ 2)
-    (Vector{Int}([i, j, k]) for i=start[1]:stop[1], j=start[2]:stop[2], k=start[3]:stop[3])
+    resize!(pw.kpoints, length(kpoints)) .= kpoints
+    resize!(pw.kweights, length(kweights)) .= kweights
+    resize!(pw.basis_wf, length(kpoints))
+
+    # Update basis_wf: For each k-Point select those G coords,
+    # satisfying the energy cutoff
+    for (ik, k) in enumerate(kpoints)
+        energy(q) = sum(abs2, pw.recip_lattice * q) / 2
+        p = [G for G in basis_ρ(pw) if energy(k + G) ≤ Ecut]
+        pw.basis_wf[ik] = [G for G in basis_ρ(pw) if energy(k + G) ≤ Ecut]
+    end
+    pw
 end
-
-function basis_ρ(pw::PlaneWaveBasis) = basis_ρ(pw.grid_size)
 
 function G_to_r!(pw::PlaneWaveBasis, f_fourier, f_real; gcoords=basis_ρ(pw))
     @assert length(f_fourier) == length(gcoords)
@@ -65,37 +86,21 @@ function G_to_r!(pw::PlaneWaveBasis, f_fourier, f_real; gcoords=basis_ρ(pw))
     f_real .*= length(pw.iFFT)
 end
 
-# A general function here for all kinds of basis
-# ρ in electron density in real space
-# function compute_hartree(b::Basis, ρ)
-# end
+function r_to_G!(pw::PlaneWaveBasis, f_real, f_fourier; gcoords=basis_ρ(pw))
+    @assert length(f_fourier) == length(gcoords)
+    @assert(size(f_real) == size(pw.FFT),
+            "Size mismatch between f_real(==$(size(f_real)) and " *
+            "FFT size(==$(size(pw.FFT))")
+    fft_size = [size(pw.FFT)...]
 
-function compute_hartree(pwb::PlaneWaveBasis, ρ_)
-    # Solve the Poisson equation ΔV = -4π ρ in Fourier space,
-    # i.e. Multiply elementwise by 4π / |G|^2.
-    values_Y = [4π * ρ[ig] / sum(abs2, pwb.recip_lattice * G)
-                for (ig, G) in enumerate(basis_ρ(pwb))]
-
-    # Zero the DC component (i.e. assume a compensating charge background)
-    values_Y[pwb.idx_DC] = 0
-
-    values_Y
-end
-
-function compute_hartree!(precomp, pwb::PlaneWaveBasis, ρ_)
-    # Solve the Poisson equation in Fourier space,
-    values_Y = compute_hartree(pwb, ρ_)
-
-    # Fourier-transform and store in values_real
-    T = eltype(pwb.lattice)
-    values_real = similar(precomp, Complex{T})
-    G_to_r!(pwb, values_Y, values_real)
-
-    if maximum(imag(values_real)) > 100 * eps(T)
-        throw(ArgumentError("Expected potential on the real-space grid B_ρ to be entirely" *
-                            " real-valued, but the present density gives rise to a " *
-                            "maximal imaginary entry of $(maximum(imag(values_real)))."))
+    # Do FFT on the full FFT plan, but truncate the resulting frequency
+    # range to the part defined by the idx_to_fft array
+    f_fourier_extended = pw.FFT * f_real  # This destroys data in f_real
+    f_fourier .= 0
+    for (ig, G) in enumerate(gcoords)
+        idx_fft = 1 .+ mod.(G, fft_size)
+        f_fourier[ig] = f_fourier_extended[idx_fft...]
     end
-    
-    recomp .= real(values_real)
+    # Again adjust normalisation as in G_to_r
+    f_fourier .*= 1 / length(pw.FFT)
 end
